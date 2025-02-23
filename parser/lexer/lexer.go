@@ -25,6 +25,10 @@ func (l *Lexer) GetLineNumber() int {
 	return l.lineNumber
 }
 
+func (l *Lexer) GetLinePosition() int {
+	return l.linePosition
+}
+
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	l.skipWhitespace()

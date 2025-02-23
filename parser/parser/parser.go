@@ -12,10 +12,10 @@ import (
 const (
 	_ int = iota
 	LOWEST
-	EQUALS      // ==
+	EQUALS      // == or !=
 	LESSGREATER // > or <
-	SUM         // +
-	PRODUCT     // *
+	SUM         // + or -
+	PRODUCT     // * or /
 	PREFIX      // -X or !X
 	CALL        // myFunction(X)
 )
@@ -59,6 +59,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -156,6 +158,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	}
 	return stmt
 }
+
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
@@ -200,13 +203,24 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
+func (p *Parser) parseBoolean() ast.Expression {
+	b := &ast.Boolean{Token: p.curToken}
+	v, err := strconv.ParseBool(p.curToken.Literal)
+	if err != nil {
+		msg := fmt.Sprintf("Line %d, col %d: could not parse %q as boolean", p.l.GetLineNumber(), p.l.GetLinePosition(), p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+	b.Value = v
+	return b
+}
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		msg := fmt.Sprintf("Line %d: could not parse %q as integer", p.l.GetLineNumber(), p.curToken.Literal)
+		msg := fmt.Sprintf("Line %d, col %d: could not parse %q as integer", p.l.GetLineNumber(), p.l.GetLinePosition(), p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
