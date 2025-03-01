@@ -1,0 +1,8 @@
+{
+    "search.exclude": {
+        "**/bookcode": true
+    },
+    "search.experimental.closedNotebookRichContentResults": true,
+    "search.quickOpen.includeSymbols": false,
+    "search.quickOpen.includeHistory": true
+}
